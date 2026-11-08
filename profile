@@ -12,9 +12,23 @@ git-prefixed() {
 }
 
 git-update() {
+    local filter="$*"
     find ~/code -type d -name .git | while read -r git_dir; do
         repo_dir="$(dirname "$git_dir")"
         rel_path="${repo_dir#~/code/}"
+        repo_name="$(basename "$repo_dir")"
+
+        if [ -n "$filter" ]; then
+            matched=0
+            for pattern in $filter; do
+                case "$rel_path" in
+                    *"$pattern"*) matched=1; break ;;
+                esac
+            done
+            if [ "$matched" -eq 0 ]; then
+                continue
+            fi
+        fi
         default_branch="$(git -C "$repo_dir" symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's|origin/||')"
         current_branch="$(git -C "$repo_dir" rev-parse --abbrev-ref HEAD 2>/dev/null)"
 
