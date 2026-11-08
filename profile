@@ -43,7 +43,12 @@ git-update() {
             continue
         fi
 
-        echo "$rel_path: switching from $current_branch to $default_branch"
+        if [ "$current_branch" = "HEAD" ]; then
+            current_sha="$(git -C "$repo_dir" rev-parse HEAD 2>/dev/null)"
+            echo "$rel_path: switching from detached HEAD ($current_sha) to $default_branch"
+        else
+            echo "$rel_path: switching from $current_branch to $default_branch"
+        fi
         git-prefixed "$rel_path" git -C "$repo_dir" checkout "$default_branch"
         git-prefixed "$rel_path" git -C "$repo_dir" reset --hard "origin/$default_branch"
     done
