@@ -39,8 +39,13 @@ git-update() {
         fi
 
         if [ "$default_branch" = "$current_branch" ]; then
-            git-prefixed "$rel_path" git -C "$repo_dir" pull --ff-only origin "$default_branch"
-            continue
+            if git -C "$repo_dir" pull --rebase origin "$default_branch"; then
+                continue
+            else
+                git -C "$repo_dir" rebase --abort 2>/dev/null
+                echo "$rel_path: skipped: rebase conflict, please resolve manually"
+                continue
+            fi
         fi
 
         if [ "$current_branch" = "HEAD" ]; then
