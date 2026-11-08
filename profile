@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Add GitHub CLI to PATH if not already present
+if ! command -v gh >/dev/null 2>&1; then
+    export PATH="$HOME/.local/share/gh_2.98.0_macOS_amd64/bin:$PATH"
+fi
+
 git-prefixed() {
     local rel_path="$1"
     shift
