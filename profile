@@ -53,7 +53,33 @@ git-update() {
         fi
 
         if [ "$default_branch" = "$current_branch" ]; then
-            if git -C "$repo_dir" pull --rebase origin "$default_branch"; then
+            merge_base="$(git -C "$repo_dir" merge-base "$default_branch" "origin/$default_branch" 2>/dev/null)"
+            local_sha="$(git -C "$repo_dir" rev-parse "$default_branch" 2>/dev/null)"
+            remote_sha="$(git -C "$repo_dir" rev-parse "origin/$default_branch" 2>/dev/null)"
+
+            if [ "$local_sha" = "$remote_sha" ]; then
+                echo "$rel_path: skipped: already caught up"
+                continue
+            fi
+
+            if [ "$remote_sha" = "$merge_base" ]; then
+                echo "$rel_path: skipped: local branch is already based on latest remote"
+                continue
+            fi
+
+            if [ "$local_sha" = "$merge_base" ]; then
+                if git -C "$repo_dir" pull --rebase origin "$default_branch" >/dev/null 2>&1; then
+                    echo "$rel_path: updated"
+                    continue
+                else
+                    git -C "$repo_dir" rebase --abort 2>/dev/null
+                    echo "$rel_path: skipped: rebase conflict, please resolve manually"
+                    continue
+                fi
+            fi
+
+            if git -C "$repo_dir" pull --rebase origin "$default_branch" >/dev/null 2>&1; then
+                echo "$rel_path: updated"
                 continue
             else
                 git -C "$repo_dir" rebase --abort 2>/dev/null
