@@ -23,6 +23,11 @@ git-update() {
             continue
         fi
 
+        if [ -n "$(git -C "$repo_dir" status --porcelain 2>/dev/null)" ]; then
+            echo "$rel_path: skipped: has uncommitted changes"
+            continue
+        fi
+
         git-prefixed "$rel_path" git -C "$repo_dir" fetch origin "$default_branch"
 
         local_head="$(git -C "$repo_dir" rev-parse "$default_branch" 2>/dev/null)"
